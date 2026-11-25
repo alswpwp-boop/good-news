@@ -1,0 +1,36 @@
+name: 뉴스레터 갱신
+
+# 폰(GitHub 앱/웹)의 Actions 탭에서 "Run workflow" 버튼으로 실행
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: newsletter
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Seoul
+      PYTHONIOENCODING: utf-8
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 뉴스 수집 및 뉴스레터 생성
+        run: python tools/good_news.py --days 7 --site . --no-open --no-ai
+
+      - name: 게시
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Newsletter $(date +%F) (phone)" || exit 0
+          git push
