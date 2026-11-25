@@ -1,0 +1,46 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>지난 호 모음</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#1d1d1f;--sub:#6b6b70;--line:#e6e2d8;--accent:#d96d1f;--chip:#fdf0e5;--nav:rgba(246,244,239,.92)}
+@media (prefers-color-scheme:dark){:root{--bg:#141414;--card:#1e1e1f;--ink:#f1f1f1;--sub:#a0a0a6;--line:#2e2e30;--accent:#f39a55;--chip:#33261b;--nav:rgba(20,20,20,.92)}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;line-height:1.55}
+.wrap{max-width:1600px;margin:0 auto;padding:32px 24px 80px}
+header{text-align:center;margin-bottom:20px}
+header h1{font-size:2.2rem;margin:0 0 6px;letter-spacing:-.02em}
+header p{color:var(--sub);margin:0}
+nav.toc{position:sticky;top:0;z-index:10;background:var(--nav);backdrop-filter:blur(8px);
+display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:12px 0;margin:0 -24px 28px;border-bottom:1px solid var(--line)}
+nav.toc a{background:var(--chip);color:var(--accent);text-decoration:none;padding:6px 14px;border-radius:999px;font-size:.9rem;font-weight:600;white-space:nowrap}
+nav.toc a:hover{background:var(--accent);color:#fff}
+section{margin-bottom:44px;scroll-margin-top:70px}
+section h2{font-size:1.35rem;border-bottom:2px solid var(--accent);padding-bottom:8px;margin:0 0 14px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.grid{grid-template-columns:1fr}.wrap{padding:24px 16px 80px}nav.toc{margin:0 -16px 24px}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;display:flex;gap:14px;align-items:flex-start}
+.card .body{min-width:0;flex:1}
+.card a.t{color:var(--ink);text-decoration:none;font-weight:600;font-size:1.02rem}
+.card a.t:hover{color:var(--accent)}
+.rank{flex:none;width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;display:grid;place-items:center}
+#highlight .card{background:linear-gradient(135deg,#ffb36b1f,#ffd86b14),var(--card)}
+.meta{color:var(--sub);font-size:.82rem;margin-top:6px;display:flex;gap:6px 10px;flex-wrap:wrap;align-items:center}
+.desc{color:var(--sub);font-size:.9rem;margin-top:6px}
+.tag{background:var(--chip);color:var(--accent);border-radius:4px;padding:0 6px;font-weight:700;font-size:.78rem}
+.crit{color:var(--sub);font-size:.85rem;margin:-6px 0 14px}
+.empty{color:var(--sub);font-style:italic}
+#top{position:fixed;right:22px;bottom:22px;width:48px;height:48px;border-radius:50%;border:none;cursor:pointer;
+background:var(--accent);color:#fff;font-size:1.3rem;box-shadow:0 4px 14px #0003;opacity:0;pointer-events:none;transition:opacity .2s}
+#top.show{opacity:1;pointer-events:auto}
+.brief{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;
+padding:12px 16px;margin:0 0 16px;font-size:.92rem;line-height:1.9}
+.brief .bl{font-weight:800;color:var(--accent);margin-right:6px}
+.brief a{color:var(--ink);text-decoration:none}.brief a:hover{color:var(--accent)}
+.brief b{color:var(--accent)}.brief small{color:var(--sub)}
+.card{scroll-margin-top:80px}
+.ko{font-weight:800;color:var(--accent);font-size:1.05rem;margin-bottom:2px}
+footer a{color:var(--accent)}
+footer{text-align:center;color:var(--sub);font-size:.8rem;margin-top:40px}
+ a.card{color:var(--ink);text-decoration:none;font-weight:600;margin:8px 0}</style></head>
+<body><div class="wrap" style="max-width:720px"><header><h1>📚 지난 호 모음</h1>
+<p><a href="../" style="color:var(--accent)">← 최신 호로</a></p></header><a class="card" href="2026-11-26.html">☀️ 2026-11-26 호</a></div></body></html>
