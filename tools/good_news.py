@@ -164,6 +164,7 @@ NEGATIVE = [
     "반대", "발목", "변수", "숙제", "여전",
     "violence", "bitter", "no major deal", "no deal", "bomb", "terror",
     "피살", "테러", "폭탄", "혼돈", "명암", "폭력", "유감", "관세",
+    "abuse", "cruelty", "charged", "strikes", "학대", "기소",
 ]
 # 광고·주식·클릭베이트성 기사 제외
 SPAM = ["stock", "shares", "price target", "market size", "cagr", "forecast 20", "webinar",
@@ -556,6 +557,15 @@ padding:12px 16px;margin:0 0 16px;font-size:.92rem;line-height:1.9}
 .brief b{color:var(--accent)}.brief small{color:var(--sub)}
 .card{scroll-margin-top:80px}
 .ko{font-weight:800;color:var(--accent);font-size:1.05rem;margin-bottom:2px}
+.vocab{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:12px 16px;margin:0 0 16px}
+.vocab .bl{font-weight:800;color:var(--accent);margin-bottom:8px}.vocab .bl small{color:var(--sub);font-weight:400;margin-left:6px}
+.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.vw{border-top:1px dashed var(--line);padding-top:8px;min-width:0}
+.vh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px}
+.vword{font-weight:800;font-size:1.1rem}.vpos{color:var(--sub);font-style:italic;font-size:.85rem}
+.vko{font-weight:600;color:var(--accent)}.vc{color:var(--sub);font-size:.75rem;margin-left:auto}
+.vex{font-size:.88rem;margin-top:4px;overflow-wrap:anywhere}.vex a{color:var(--ink);text-decoration:none}.vex a:hover{color:var(--accent)}
+.vex b{color:var(--accent)}.vexko{color:var(--sub);font-size:.82rem;margin-top:2px}
 footer a{color:var(--accent)}
 footer{text-align:center;color:var(--sub);font-size:.8rem;margin-top:40px}
 """
@@ -607,6 +617,108 @@ def summarize_ko(highlights: list[dict], model: str = "haiku") -> None:
         print(f"   (한국어 요약 실패, 원문 제목 사용: {type(e).__name__} {e})", file=sys.stderr)
 
 
+COMMON_EN = set("""
+about above across after again against along already also although always among another around
+because become before behind being below between both bring build called could country during
+each early either enough every first found from further going great group having health help
+however human information large later least little local longer major making might million
+month months more most much never number often other others people percent place point possible
+public really report research right said says scientists second several should show shows since
+small something state states still study system their there these thing things think those
+though three through today together under until using very want water week weeks well were
+where which while whole world would years year young first-ever breakthrough record new news
+""".split())
+
+
+def run_claude(prompt: str, model: str = "haiku", timeout: int = 180) -> str:
+    import os
+    import subprocess
+    import tempfile
+    exe = find_claude()
+    if not exe:
+        raise FileNotFoundError("claude")
+    env = {k: v for k, v in os.environ.items() if k != "CLAUDECODE"}
+    r = subprocess.run([exe, "-p", "--model", model], input=prompt, capture_output=True,
+                       text=True, encoding="utf-8", timeout=timeout, env=env, cwd=tempfile.gettempdir())
+    return r.stdout
+
+
+def make_vocab(groups: dict[str, list[dict]], highlights: list[dict], n: int = 5) -> list[dict]:
+    """이번 호 영어 기사에서 자주 나온 중상급 단어 n개를 골라 뜻·예문을 붙임"""
+    import json
+    arts = [it for v in groups.values() for it in v] + highlights
+    arts = [a for a in arts if a["lang"] == "en"]
+    count: dict[str, int] = {}
+    example: dict[str, tuple[str, str]] = {}  # 단어 → (그 단어가 들어간 문장, 기사 링크)
+    for a in arts:
+        # 예문은 긍정 필터를 통과한 제목에서만 (설명문엔 부정적 문장이 섞일 수 있음)
+        sents = [a["title"]]
+        for w in set(re.findall(r"[a-z][a-z-]{4,}", a["title"].lower())):
+            w = w.strip("-")
+            if w in COMMON_EN or w in STOPWORDS or len(w) < 6:
+                continue
+            sent = next((s for s in sents if re.search(r"(?i)\b" + re.escape(w) + r"\b", s)), None)
+            if not sent:
+                continue
+            count[w] = count.get(w, 0) + 1
+            if w not in example or len(sent) < len(example[w][0]):
+                example[w] = (sent, a["link"])
+    cands = [w for w in sorted(count, key=lambda w: count[w], reverse=True) if count[w] >= 2][:100]
+    if not cands:
+        return []
+    lines = "\n".join(f"- {w} ({count[w]}회): {example[w][0]}" for w in cands)
+    prompt = (
+        f"아래는 이번 주 영어 뉴스에 자주 나온 단어(등장 횟수)와 그 단어가 쓰인 실제 문장이다.\n"
+        f"한국인 성인 학습자를 위해 단어 {n}개를 골라라. 기준: 난이도가 우선이다. 수능 최상위~토플/GRE 수준(CEFR C1 이상)만. "
+        "rescue, treatment, decade, historic, approve, discover, record 같은 중학교~고교 기본 어휘는 반드시 제외. "
+        "그 조건 안에서 등장 횟수가 많은 것을 우선. 고유명사, 좁은 전문용어는 제외. 단어끼리 어근이 겹치지 않게, "
+        "5개 단어의 예문이 모두 서로 다른 문장이 되게.\n"
+        "각 항목 형식: {\"word\": 기본형, \"pos\": 품사 약어(n./v./adj./adv.), \"ko\": 한국어 뜻(짧게), "
+        "\"ex\": 목록에 있는 그 단어의 예문 원문 그대로, \"ex_ko\": 예문의 자연스러운 한국어 번역, "
+        "\"src\": 목록의 원래 단어 그대로}\n"
+        f"출력은 객체 {n}개짜리 JSON 배열 하나만. 다른 말은 쓰지 말 것.\n\n{lines}"
+    )
+    try:
+        m = re.search(r"\[.*\]", run_claude(prompt), re.S)
+        arr = json.loads(m.group(0)) if m else []
+        out = []
+        for v in arr[:n]:
+            key = str(v.get("src", "")).lower()
+            if key not in example:
+                key = str(v.get("word", "")).lower()
+            if key in example:
+                v["ex"], v["link"] = example[key]  # 예문은 원문 그대로 사용
+                v["src"] = key
+            v["count"] = count.get(key, 0)
+            out.append(v)
+        print(f"   📖 오늘의 영단어 {len(out)}개 선정")
+        return out
+    except Exception as e:
+        print(f"   (영단어 선정 실패: {type(e).__name__} {e})", file=sys.stderr)
+        return []
+
+
+def vocab_html(vocab: list[dict]) -> str:
+    if not vocab:
+        return ""
+    rows = []
+    for v in vocab:
+        word = html.escape(str(v.get("word", "")))
+        ex = html.escape(str(v.get("ex", "")))
+        src = str(v.get("src") or v.get("word", ""))
+        if src:  # 예문 속 단어 강조
+            ex = re.sub(r"(?i)\b(" + re.escape(html.escape(src)) + r"\w*)", r"<b>\1</b>", ex, count=1)
+        if v.get("link"):
+            ex = f'<a href="{html.escape(v["link"])}" target="_blank" rel="noopener">{ex}</a>'
+        cnt = f'<span class="vc">{v["count"]}회 등장</span>' if v.get("count") else ""
+        rows.append(f'<div class="vw"><div class="vh"><span class="vword">{word}</span>'
+                    f'<span class="vpos">{html.escape(str(v.get("pos", "")))}</span>'
+                    f'<span class="vko">{html.escape(str(v.get("ko", "")))}</span>{cnt}</div>'
+                    f'<div class="vex">{ex}</div><div class="vexko">{html.escape(str(v.get("ex_ko", "")))}</div></div>')
+    return (f'<div class="vocab"><div class="bl">📖 오늘의 영단어 <small>이번 호 기사에 자주 나온 단어</small></div>'
+            f'<div class="vgrid">{"".join(rows)}</div></div>')
+
+
 def card(it: dict, rank: int | None = None) -> str:
     lang = "KR" if it["lang"] == "ko" else "EN"
     desc = it["desc"]
@@ -627,7 +739,8 @@ def card(it: dict, rank: int | None = None) -> str:
             f'<span>{html.escape(it["source"])}</span><span>{it["date"].astimezone().strftime("%Y-%m-%d")}</span></div></div></div>')
 
 
-def render(groups: dict[str, list[dict]], highlights: list[dict], days: int, archive_href: str = "") -> str:
+def render(groups: dict[str, list[dict]], highlights: list[dict], days: int, archive_href: str = "",
+           vocab: list[dict] | None = None) -> str:
     now = datetime.now()
     since = (now - timedelta(days=days)).strftime("%Y.%m.%d")
     total = sum(len(v) for v in groups.values())
@@ -658,6 +771,7 @@ def render(groups: dict[str, list[dict]], highlights: list[dict], days: int, arc
 <style>{CSS}</style></head><body><div class="wrap">
 <header><h1>☀️ 희망 뉴스레터</h1><p>{since} ~ {now:%Y.%m.%d} · 세계의 진보와 돌파구 소식 {total}건</p></header>
 <div class="brief"><span class="bl">📌 이번 호 TOP {len(highlights)}</span> {brief}</div>
+{vocab_html(vocab or [])}
 <nav class="toc">{toc}</nav>
 {secs}
 <footer>자동 수집된 헤드라인입니다. 자세한 내용과 사실 여부는 원문 기사에서 확인하세요.<br>
@@ -699,21 +813,22 @@ def main():
     if not a.no_ai:
         summarize_ko(highlights)
     highlights = [h for h in highlights if not h.get("dup")][: a.highlights]
+    vocab = [] if a.no_ai else make_vocab(groups, highlights)
 
     if a.site:
         site = Path(a.site)
         arch = site / "archive"
         arch.mkdir(parents=True, exist_ok=True)
         (arch / f"{datetime.now():%Y-%m-%d}.html").write_text(
-            render(groups, highlights, a.days, archive_href="./"), encoding="utf-8")
+            render(groups, highlights, a.days, archive_href="./", vocab=vocab), encoding="utf-8")
         out = site / "index.html"
-        out.write_text(render(groups, highlights, a.days, archive_href="archive/"), encoding="utf-8")
+        out.write_text(render(groups, highlights, a.days, archive_href="archive/", vocab=vocab), encoding="utf-8")
         write_archive_index(arch)
     else:
         out_dir = Path(__file__).parent / "newsletters"
         out_dir.mkdir(exist_ok=True)
         out = Path(a.out) if a.out else out_dir / f"newsletter_{datetime.now():%Y%m%d}.html"
-        out.write_text(render(groups, highlights, a.days), encoding="utf-8")
+        out.write_text(render(groups, highlights, a.days, vocab=vocab), encoding="utf-8")
     print(f"✅ 완료 ({time.time() - t0:.1f}초): {out.resolve()}")
     if not a.no_open:
         webbrowser.open(out.resolve().as_uri())
