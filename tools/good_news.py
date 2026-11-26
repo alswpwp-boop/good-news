@@ -76,6 +76,54 @@ CATEGORIES = {
         ],
         "ko": ["퇴치 선언", "빈곤 감소", "희망 소식"],
     },
+    "economy": {
+        "name": "💰 경제",
+        "en": [
+            "unemployment falls record low", "inflation eases", "wages rise workers",
+            "economy grows faster than expected", "poverty rate drops economy", "jobs report beats expectations",
+        ],
+        "ko": ["수출 역대 최대", "고용률 역대 최고", "물가 안정세", "경제 성장률 상향", "무역흑자"],
+    },
+    "politics": {
+        "name": "🏛 정치 · 외교",
+        "en": [
+            "peace agreement signed", "historic peace deal", "bipartisan bill passes",
+            "landmark law passed", "prisoners released diplomacy", "countries agree treaty",
+        ],
+        "ko": ["평화 협정 체결", "여야 합의 법안 통과", "정상회담 합의", "이산가족 상봉", "외교 합의 타결"],
+    },
+    "culture": {
+        "name": "🎎 문화",
+        "en": [
+            "UNESCO world heritage listed", "ancient artifact returned home", "cultural heritage restored",
+            "library opens community", "festival record attendance", "indigenous language revived",
+        ],
+        "ko": ["유네스코 세계유산 등재", "문화재 환수", "한류 역대 최고", "문화유산 복원", "K-컬처 세계"],
+    },
+    "arts": {
+        "name": "🎨 예술",
+        "en": [
+            "lost painting rediscovered", "masterpiece restored", "museum reopens",
+            "art prize winner", "orchestra historic performance", "film wins award festival",
+        ],
+        "ko": ["국제 영화제 수상", "명작 복원 공개", "세계적 예술상 수상", "미술관 개관", "클래식 콩쿠르 우승",
+               "빌보드 1위", "한국 작가 문학상 수상", "세계 초연 공연", "전시 관람객 역대 최다"],
+    },
+    "animals": {
+        "name": "🐾 동물",
+        "en": [
+            "animal rescued", "rare animal born zoo", "endangered species population rebounds",
+            "baby animal born conservation", "wildlife returns after decades", "shelter dogs adopted",
+        ],
+        "ko": ["멸종위기 동물 번식 성공", "동물 구조", "새끼 탄생 동물원", "유기견 입양", "야생동물 복귀"],
+    },
+}
+
+# 카테고리 특성상 SPAM 단어여도 허용할 것 (예: 경제의 '수출', 예술의 '수상')
+SPAM_ALLOW = {
+    "economy": ["수출", "매출", "실적", "영업이익", "revenue", "earnings"],
+    "arts": ["수상", "혁신상", "출시"],
+    "culture": ["수상"],
 }
 
 # 긍정 뉴스 전문 매체 RSS (카테고리는 키워드로 자동 분류)
@@ -93,12 +141,16 @@ POSITIVE = {
     # 강한 신호 (3점)
     3: ["breakthrough", "world first", "world's first", "first-ever", "first ever", "cure", "cured",
         "proved", "proves", "proof", "solved", "eradicat", "eliminat", "approved", "restores",
-        "record-breaking", "historic", "milestone",
-        "세계 최초", "돌파구", "완치", "증명", "해결", "퇴치", "성공", "승인", "신기록", "최초"],
+        "record-breaking", "historic", "milestone", "peace deal", "peace agreement", "rescued",
+        "rebound", "record low", "record high", "landmark", "returned", "reunited", "rediscovered",
+        "세계 최초", "돌파구", "완치", "증명", "해결", "퇴치", "성공", "승인", "신기록", "최초",
+        "역대 최대", "역대 최고", "평화", "타결", "등재", "환수", "구조", "탄생", "우승", "상봉"],
     # 보통 신호 (1점)
     1: ["discover", "new treatment", "promising", "hope", "success", "advance", "innovation",
         "record", "saved", "recover", "regenerat", "restore", "boost", "improve",
-        "개발", "발견", "혁신", "희망", "회복", "복원", "기록"],
+        "agree", "passes", "signed", "born", "adopted", "award", "wins", "growth", "eases", "reopen",
+        "개발", "발견", "혁신", "희망", "회복", "복원", "기록", "합의", "통과", "체결", "성장",
+        "안정", "흑자", "수상", "입양", "번식", "개관", "공개", "1위", "최다", "초연"],
 }
 NEGATIVE = [
     "dies", "died", "death", "killed", "kill", "war", "attack", "shooting", "crash", "scandal",
@@ -108,6 +160,10 @@ NEGATIVE = [
     "tired", "won't", "gatekeeping", "상실", "잃었", "잃어", "도마", "비판",
     "사망", "숨져", "전쟁", "공격", "사고", "논란", "사기", "소송", "체포", "위기", "붕괴",
     "해고", "실패", "경고", "위협", "우려", "참사", "재난", "의혹", "폭락", "피해",
+    "conflict", "pressure", "oil spill", "protest", "갈등", "압박", "압력", "떼죽음", "유출",
+    "반대", "발목", "변수", "숙제", "여전",
+    "violence", "bitter", "no major deal", "no deal", "bomb", "terror",
+    "피살", "테러", "폭탄", "혼돈", "명암", "폭력", "유감", "관세",
 ]
 # 광고·주식·클릭베이트성 기사 제외
 SPAM = ["stock", "shares", "price target", "market size", "cagr", "forecast 20", "webinar",
@@ -148,6 +204,17 @@ CATEGORY_HINTS = {
     "planet": ["climate", "solar", "wind", "renewable", "forest", "ocean", "wildlife", "extinct",
                "emission", "기후", "태양광", "풍력", "재생에너지", "숲", "바다", "멸종", "탄소"],
     "society": ["poverty", "education", "community", "eradicat", "literacy", "빈곤", "교육", "공동체"],
+    "economy": ["economy", "economic", "unemployment", "inflation", "wages", "jobs", "gdp", "trade",
+                "경제", "고용", "물가", "수출", "성장률", "무역", "일자리"],
+    "politics": ["peace", "treaty", "diplomat", "parliament", "congress", "bipartisan", "law ", "summit",
+                 "평화", "협정", "외교", "국회", "법안", "정상회담", "여야", "이산가족"],
+    "culture": ["heritage", "unesco", "cultural", "culture", "artifact", "festival", "tradition", "language",
+                "문화", "유산", "유네스코", "문화재", "한류", "축제", "전통"],
+    "arts": ["painting", "museum", "artist", "orchestra", "film", "music", "gallery", "masterpiece", "novel",
+             "미술", "예술", "영화제", "음악", "화가", "전시", "콩쿠르", "작가", "빌보드", "문학상",
+             "공연", "앨범", "소설"],
+    "animals": ["animal", "dog", "cat ", "zoo", "panda", "whale", "elephant", "bird", "puppy", "cub", "shelter",
+                "동물", "강아지", "고양이", "유기견", "판다", "고래", "코끼리", "새끼", "동물원"],
 }
 
 
@@ -285,7 +352,8 @@ def score(item: dict) -> int:
 def is_bad(item: dict) -> bool:
     t = item["title"].lower()
     src = (item["source"] + " " + item["link"]).lower()
-    return (any(has_word(t, k) for k in NEGATIVE) or any(k in t for k in SPAM)
+    allow = SPAM_ALLOW.get(item["cat"] or "", [])
+    return (any(has_word(t, k) for k in NEGATIVE) or any(k in t for k in SPAM if k not in allow)
             or any(b in src for b in BLOCKED_SOURCES))
 
 
